@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>RigsandCables Inc — AP/AR Invoices & Receipts</title>
+
+  <!-- PDF text extraction (works for text-based PDFs; scanned PDFs need OCR) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
   <style>
     :root{
       --bg:#0b1220; --panel:#121a2b; --panel2:#0f1726; --text:#e7ecff; --muted:#a9b3d6;
@@ -22,9 +26,7 @@
       padding:28px 18px 18px; max-width:1200px; margin:0 auto;
       display:flex; gap:14px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
     }
-    .brand{
-      display:flex; flex-direction:column; gap:6px;
-    }
+    .brand{display:flex; flex-direction:column; gap:6px}
     .brand h1{margin:0; font-size:20px; letter-spacing:.2px}
     .brand p{margin:0; color:var(--muted); font-size:13px}
     .top-actions{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
@@ -35,26 +37,15 @@
       font-weight:600; font-size:13px;
     }
     button:hover{border-color:#35518a}
-    button.primary{
-      background:linear-gradient(180deg, #2d6fff 0%, #1f4dcc 100%);
-      border-color:#2f63df;
-    }
-    button.good{
-      background:linear-gradient(180deg, #20c997 0%, #119d76 100%);
-      border-color:#1bb78a;
-    }
-    button.danger{
-      background:linear-gradient(180deg, #ff6b6b 0%, #d95353 100%);
-      border-color:#ff6b6b;
-    }
+    button.primary{background:linear-gradient(180deg, #2d6fff 0%, #1f4dcc 100%); border-color:#2f63df;}
+    button.good{background:linear-gradient(180deg, #20c997 0%, #119d76 100%); border-color:#1bb78a;}
+    button.danger{background:linear-gradient(180deg, #ff6b6b 0%, #d95353 100%); border-color:#ff6b6b;}
     .wrap{
       max-width:1200px; margin:0 auto; padding:0 18px 28px;
       display:grid; gap:14px;
       grid-template-columns: 1.1fr .9fr;
     }
-    @media (max-width: 980px){
-      .wrap{grid-template-columns:1fr}
-    }
+    @media (max-width: 980px){ .wrap{grid-template-columns:1fr} }
     .card{
       background:linear-gradient(180deg, rgba(255,255,255,.05) 0%, rgba(255,255,255,.02) 100%);
       border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);
@@ -68,10 +59,7 @@
     .card .hd h2{margin:0; font-size:14px}
     .card .hd .sub{color:var(--muted); font-size:12px}
     .card .bd{padding:14px}
-    .grid{
-      display:grid; gap:10px;
-      grid-template-columns: repeat(12, 1fr);
-    }
+    .grid{display:grid; gap:10px; grid-template-columns: repeat(12, 1fr);}
     .field{grid-column: span 6; display:flex; flex-direction:column; gap:6px}
     .field.sm{grid-column: span 3}
     .field.lg{grid-column: span 12}
@@ -92,19 +80,13 @@
     }
     .kpis{display:grid; grid-template-columns: repeat(3, 1fr); gap:10px}
     @media(max-width:600px){.kpis{grid-template-columns:1fr}}
-    .kpi{
-      padding:12px; border-radius:14px; border:1px solid rgba(255,255,255,.07);
-      background:rgba(0,0,0,.18);
-    }
+    .kpi{padding:12px; border-radius:14px; border:1px solid rgba(255,255,255,.07); background:rgba(0,0,0,.18);}
     .kpi .t{color:var(--muted); font-size:12px}
     .kpi .v{font-size:18px; font-weight:800; margin-top:4px}
     .kpi .v.good{color:#7cf1d0}
     .kpi .v.bad{color:#ff9a9a}
     table{width:100%; border-collapse:collapse}
-    th, td{
-      text-align:left; padding:10px 8px; border-bottom:1px solid rgba(255,255,255,.06);
-      font-size:12px; vertical-align:top;
-    }
+    th, td{ text-align:left; padding:10px 8px; border-bottom:1px solid rgba(255,255,255,.06); font-size:12px; vertical-align:top; }
     th{color:#b8c3ea; font-size:12px; font-weight:700}
     td .mini{color:var(--muted); font-size:11px}
     .tag{
@@ -125,14 +107,11 @@
     .right-col{display:grid; gap:14px}
     .small{font-size:12px}
     .mono{font-family:var(--mono)}
-    .link{
-      color:#9cc3ff; text-decoration:underline; cursor:pointer;
-    }
-    .footer{
-      max-width:1200px; margin:0 auto; padding:0 18px 28px; color:rgba(255,255,255,.45); font-size:12px;
-    }
+    .link{color:#9cc3ff; text-decoration:underline; cursor:pointer;}
+    .footer{max-width:1200px; margin:0 auto; padding:0 18px 28px; color:rgba(255,255,255,.45); font-size:12px;}
   </style>
 </head>
+
 <body>
   <header>
     <div class="brand">
@@ -149,13 +128,12 @@
   </header>
 
   <div class="wrap">
-    <!-- LEFT: Data entry + tables -->
     <div class="left-col" style="display:grid; gap:14px;">
       <div class="card">
         <div class="hd">
           <div>
             <h2>Add Invoice / Receipt (AP/AR)</h2>
-            <div class="sub">Stores file + accounting metadata. “Incurred” = recognized cost/revenue date; “Paid/Received” = cash date.</div>
+            <div class="sub">Now supports PDF text extraction autofill (supplier / invoice # / amounts / dates) for text-based PDFs.</div>
           </div>
           <span class="pill" id="dbStatus">DB: initializing…</span>
         </div>
@@ -165,7 +143,9 @@
               <div class="field lg">
                 <label>Upload file (PDF, image, etc.)</label>
                 <input type="file" id="fileInput" required />
-                <div class="small muted">Files are stored in your browser database (IndexedDB). If you share the link, others will have their own separate local DB unless you use a real backend.</div>
+                <div class="small muted">
+                  Autofill works if PDF has selectable text. Scanned PDFs need OCR (ask me and I’ll add it).
+                </div>
               </div>
 
               <div class="field">
@@ -244,9 +224,7 @@
 
           <div class="hr"></div>
           <div class="note">
-            <b>Incurred payment idea</b>: This tool separates <span class="mono">Incurred Date</span> (when expense/revenue is recognized)
-            from <span class="mono">Paid/Received Date</span> (when cash happens). Your “as of today paid” totals use the cash date;
-            your incurred totals can be used for accrual-style reporting.
+            <b>Incurred payment idea</b>: Incurred = recognition date. Paid/Received = cash date. KPI “paid as of today” uses cash date.
           </div>
         </div>
       </div>
@@ -290,13 +268,12 @@
             </table>
           </div>
           <div style="padding:12px 14px; color:var(--muted); font-size:12px;">
-            Tip: “Open” uses Due Date for upcoming obligations; “Paid/Received” uses Paid Date for “as of today” totals.
+            Tip: “Open” uses Due Date; “Paid/Received” uses Paid Date.
           </div>
         </div>
       </div>
     </div>
 
-    <!-- RIGHT: Contracts + dashboards -->
     <div class="right-col">
       <div class="card">
         <div class="hd">
@@ -310,24 +287,18 @@
             <div class="kpi">
               <div class="t">AP Paid (cash) — suppliers</div>
               <div class="v good" id="kpiApPaid">$0</div>
-              <div class="mini muted">Sum of AP documents marked paid with paid date ≤ today.</div>
+              <div class="mini muted">AP Paid where paid date ≤ today.</div>
             </div>
             <div class="kpi">
               <div class="t">AR Received (cash) — customers</div>
               <div class="v good" id="kpiArPaid">$0</div>
-              <div class="mini muted">Sum of AR documents marked paid/received with paid date ≤ today.</div>
+              <div class="mini muted">AR Paid where paid date ≤ today.</div>
             </div>
             <div class="kpi">
               <div class="t">Open AP Due Next 90 Days</div>
               <div class="v bad" id="kpiAp90">$0</div>
-              <div class="mini muted">Sum of open AP due within 90 days.</div>
+              <div class="mini muted">Open AP due within 90 days.</div>
             </div>
-          </div>
-
-          <div class="hr"></div>
-
-          <div class="row" style="justify-content:space-between;">
-            <div class="muted small">Supplier paid totals include document cash payments + contract scheduled cash if you choose to track both.</div>
           </div>
         </div>
       </div>
@@ -336,7 +307,7 @@
         <div class="hd">
           <div>
             <h2>Supplier Contracts (Schedule next 5 years)</h2>
-            <div class="sub">Add recurring contract payments for suppliers who have contracts with RigsandCables Inc.</div>
+            <div class="sub">Recurring contract payments for suppliers.</div>
           </div>
         </div>
         <div class="bd">
@@ -394,14 +365,8 @@
           </form>
 
           <div class="hr"></div>
-
           <div class="note">
-            Contract schedule logic:
-            <ul style="margin:8px 0 0 18px; padding:0; color:var(--muted);">
-              <li><b>Scheduled cash date</b> = period date + net days</li>
-              <li><b>Incurred date</b> = scheduled cash date − incurred offset days (for accrual-style reporting)</li>
-              <li>We forecast <b>only next 5 years from today</b>.</li>
-            </ul>
+            Cash date = period anchor + net days • Incurred date = cash date − offset • Forecast window = next 5 years.
           </div>
         </div>
       </div>
@@ -410,7 +375,7 @@
         <div class="hd">
           <div>
             <h2>Supplier Summary</h2>
-            <div class="sub">Paid as of today + scheduled next 5 years (contracts + open invoices)</div>
+            <div class="sub">Paid as of today + scheduled next 5 years</div>
           </div>
           <div class="row">
             <select id="supplierPick" style="min-width:240px;"></select>
@@ -421,11 +386,7 @@
           <div style="overflow:auto;">
             <table>
               <thead>
-                <tr>
-                  <th>Metric</th>
-                  <th>Value</th>
-                  <th>Notes</th>
-                </tr>
+                <tr><th>Metric</th><th>Value</th><th>Notes</th></tr>
               </thead>
               <tbody id="supplierSummary"></tbody>
             </table>
@@ -449,7 +410,6 @@
               </table>
             </div>
           </div>
-
         </div>
       </div>
 
@@ -465,30 +425,22 @@
             <table>
               <thead>
                 <tr>
-                  <th>Supplier</th>
-                  <th>Contract</th>
-                  <th>Freq</th>
-                  <th>Amount</th>
-                  <th>Start</th>
-                  <th>End</th>
-                  <th>Net</th>
-                  <th>Actions</th>
+                  <th>Supplier</th><th>Contract</th><th>Freq</th><th>Amount</th><th>Start</th><th>End</th><th>Net</th><th>Actions</th>
                 </tr>
               </thead>
               <tbody id="contractsTbody"></tbody>
             </table>
           </div>
           <div style="padding:12px 14px; color:var(--muted); font-size:12px;">
-            If you need multi-user sharing with a real database, ask me for the Supabase version.
+            For true sharing across users + OCR, you’ll want a real backend (Supabase/Firebase).
           </div>
         </div>
       </div>
-
     </div>
   </div>
 
   <div class="footer">
-    <div class="mono">RigsandCables Inc — Local MVP • Data stored in IndexedDB (browser). Export/Backup recommended.</div>
+    <div class="mono">RigsandCables Inc — Local MVP • Data stored in IndexedDB • Export/Backup recommended.</div>
   </div>
 
 <script>
@@ -521,13 +473,8 @@ function openDB(){
   });
 }
 
-function tx(storeName, mode="readonly"){
-  return db.transaction(storeName, mode).objectStore(storeName);
-}
-
-function id(){
-  return crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + "_" + Math.random().toString(16).slice(2);
-}
+function tx(storeName, mode="readonly"){ return db.transaction(storeName, mode).objectStore(storeName); }
+function id(){ return crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + "_" + Math.random().toString(16).slice(2); }
 
 function fmtMoney(n){
   const v = Number(n||0);
@@ -550,9 +497,7 @@ function addDays(iso, days){
   return toISODate(d);
 }
 
-function todayISO(){
-  return toISODate(new Date());
-}
+function todayISO(){ return toISODate(new Date()); }
 
 async function putDoc(doc){
   return new Promise((resolve,reject)=>{
@@ -621,14 +566,12 @@ function openStoredFile(doc){
   if(!doc.fileBlob) return;
   const url = URL.createObjectURL(doc.fileBlob);
   window.open(url, "_blank", "noopener,noreferrer");
-  // URL.revokeObjectURL(url) // not immediate, to keep tab working
 }
 
 /* ===========================
    Scheduling
 =========================== */
 function iterScheduleDates(startISO, endISO, freq){
-  // Generates period "anchor dates" (not cash dates). Cash date = anchor + netDays.
   const dates = [];
   let d = new Date(startISO);
   const end = endISO ? new Date(endISO) : null;
@@ -648,7 +591,6 @@ function iterScheduleDates(startISO, endISO, freq){
     dates.push(iso);
     d = step(d);
     if(end && d > end) break;
-    // safety: stop if > 30 years
     if(i>4000) break;
   }
   return dates;
@@ -709,6 +651,15 @@ function clearContractForm(){
   el("cIncurOffset").value = 0;
 }
 
+function escapeHtml(s){
+  return String(s||"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
 function docRow(doc){
   const typeTag = doc.docType === "AP"
     ? `<span class="tag bad">AP</span>`
@@ -759,13 +710,12 @@ function contractRow(c){
   `;
 }
 
-function escapeHtml(s){
-  return String(s||"")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
+function getDocFilters(){
+  return {
+    q: (el("searchDocs").value||"").trim().toLowerCase(),
+    type: el("filterType").value,
+    status: el("filterStatus").value
+  };
 }
 
 async function refreshAll(){
@@ -775,14 +725,6 @@ async function refreshAll(){
   renderSupplierPick(docs, contracts);
   renderKPIs(docs);
   renderSupplierSummary(docs, contracts);
-}
-
-function getDocFilters(){
-  return {
-    q: (el("searchDocs").value||"").trim().toLowerCase(),
-    type: el("filterType").value,
-    status: el("filterStatus").value
-  };
 }
 
 function renderDocs(docs){
@@ -799,22 +741,22 @@ function renderDocs(docs){
     ? filtered.map(docRow).join("")
     : `<tr><td colspan="8" class="muted" style="padding:14px;">No documents yet.</td></tr>`;
 
-  // wire open / mark / delete
   el("docsTbody").querySelectorAll("[data-open]").forEach(a=>{
     a.addEventListener("click", async ()=>{
-      const id = a.getAttribute("data-open");
+      const idv = a.getAttribute("data-open");
       const docs2 = await getAll("docs");
-      const doc = docs2.find(x=>x.id===id);
+      const doc = docs2.find(x=>x.id===idv);
       if(doc) openStoredFile(doc);
     });
   });
+
   el("docsTbody").querySelectorAll("[data-del]").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
-      const id = btn.getAttribute("data-del");
-      await del("docs", id);
+      await del("docs", btn.getAttribute("data-del"));
       await refreshAll();
     });
   });
+
   el("docsTbody").querySelectorAll("[data-mark]").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
       const idv = btn.getAttribute("data-mark");
@@ -842,8 +784,7 @@ function renderContracts(contracts){
 
   el("contractsTbody").querySelectorAll("[data-cdel]").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
-      const idv = btn.getAttribute("data-cdel");
-      await del("contracts", idv);
+      await del("contracts", btn.getAttribute("data-cdel"));
       await refreshAll();
     });
   });
@@ -855,7 +796,8 @@ function renderSupplierPick(docs, contracts){
   contracts.forEach(c => parties.add(c.supplier));
   const list = Array.from(parties).filter(Boolean).sort((a,b)=>a.localeCompare(b));
   const prev = el("supplierPick").value;
-  el("supplierPick").innerHTML = `<option value="">All suppliers</option>` + list.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("");
+  el("supplierPick").innerHTML = `<option value="">All suppliers</option>` +
+    list.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("");
   el("supplierPick").value = list.includes(prev) ? prev : "";
 }
 
@@ -902,11 +844,9 @@ function renderSupplierSummary(docs, contracts){
     .filter(d => d.docType==="AP" && d.incurredDate && d.incurredDate.slice(0,4) === t.slice(0,4))
     .reduce((s,d)=> s + Number(d.amount||0), 0);
 
-  // 5-year contract schedule (cash)
   const sched = build5YearContractSchedule(contractsFor, supplier || null);
   const schedTotal = sched.reduce((s,x)=> s + Number(x.amount||0), 0);
 
-  // open invoice schedule for next 5 years (use dueDate)
   const tEnd = new Date(t); tEnd.setFullYear(tEnd.getFullYear()+5);
   const tEndIso = toISODate(tEnd);
   const openInvoice5yr = docsFor
@@ -917,52 +857,37 @@ function renderSupplierSummary(docs, contracts){
 
   const rows = [
     ["Supplier scope", supplier ? escapeHtml(supplier) : "<span class='muted'>All suppliers</span>", "Filter controls the summary"],
-    ["Paid as of today (cash)", fmtMoney(apPaidCash), "AP documents with status Paid and paid date ≤ today"],
-    ["Open AP total", fmtMoney(apOpenTotal), "All open AP documents (regardless of due date)"],
-    ["Incurred AP YTD", fmtMoney(apIncurredYTD), "AP incurred in current calendar year (accrual-style)"],
-    ["Scheduled cash next 5 years (contracts)", fmtMoney(schedTotal), "Generated from contract frequency + net terms"],
-    ["Open AP due next 5 years (invoices)", fmtMoney(openInvoice5yr), "Open AP documents with due date in next 5 years"],
-    ["Total scheduled cash next 5 years", fmtMoney(total5yr), "Contracts + open invoices (cash view)"]
+    ["Paid as of today (cash)", fmtMoney(apPaidCash), "AP Paid with paid date ≤ today"],
+    ["Open AP total", fmtMoney(apOpenTotal), "All open AP docs"],
+    ["Incurred AP YTD", fmtMoney(apIncurredYTD), "Accrual-style: incurred this year"],
+    ["Scheduled cash next 5 years (contracts)", fmtMoney(schedTotal), "Generated from contracts"],
+    ["Open AP due next 5 years (invoices)", fmtMoney(openInvoice5yr), "Open AP due in next 5 years"],
+    ["Total scheduled cash next 5 years", fmtMoney(total5yr), "Contracts + open invoices"]
   ];
 
   el("supplierSummary").innerHTML = rows.map(r=>`
-    <tr>
-      <td>${r[0]}</td>
-      <td><b>${r[1]}</b></td>
-      <td class="muted">${r[2]}</td>
-    </tr>
+    <tr><td>${r[0]}</td><td><b>${r[1]}</b></td><td class="muted">${r[2]}</td></tr>
   `).join("");
 
-  // Year breakdown (cash)
-  const yearMap = new Map(); // year -> {contracts, invoices}
+  const yearMap = new Map();
   const y0 = Number(t.slice(0,4));
-  for(let y=y0; y<=y0+5; y++){
-    yearMap.set(String(y), {contracts:0, invoices:0});
-  }
+  for(let y=y0; y<=y0+5; y++) yearMap.set(String(y), {contracts:0, invoices:0});
+
   for(const s of sched){
     const y = s.cashDate.slice(0,4);
     if(yearMap.has(y)) yearMap.get(y).contracts += Number(s.amount||0);
   }
   for(const d of docsFor.filter(x=>x.docType==="AP" && x.status==="Open" && x.dueDate)){
     const y = x.dueDate.slice(0,4);
-    if(yearMap.has(y)){
-      // only count future window
-      if(x.dueDate >= t && x.dueDate <= tEndIso) yearMap.get(y).invoices += Number(x.amount||0);
-    }
+    if(yearMap.has(y) && d.dueDate >= t && d.dueDate <= tEndIso) yearMap.get(y).invoices += Number(d.amount||0);
   }
 
-  const yrRows = Array.from(yearMap.entries()).sort((a,b)=>a[0].localeCompare(b[0])).map(([y,v])=>{
-    const tot = v.contracts + v.invoices;
-    return `
-      <tr>
-        <td>${y}</td>
-        <td>${fmtMoney(v.contracts)}</td>
-        <td>${fmtMoney(v.invoices)}</td>
-        <td><b>${fmtMoney(tot)}</b></td>
-      </tr>
-    `;
-  });
-  el("yearBreakdown").innerHTML = yrRows.join("");
+  el("yearBreakdown").innerHTML = Array.from(yearMap.entries())
+    .sort((a,b)=>a[0].localeCompare(b[0]))
+    .map(([y,v])=>{
+      const tot = v.contracts + v.invoices;
+      return `<tr><td>${y}</td><td>${fmtMoney(v.contracts)}</td><td>${fmtMoney(v.invoices)}</td><td><b>${fmtMoney(tot)}</b></td></tr>`;
+    }).join("");
 }
 
 /* ===========================
@@ -978,31 +903,24 @@ function download(filename, blob){
   setTimeout(()=>URL.revokeObjectURL(url), 2000);
 }
 
+function csvCell(v){
+  if(v === null || v === undefined) return "";
+  const s = String(v).replaceAll('"','""');
+  return `"${s}"`;
+}
+
 async function exportCSV(){
   const [docs, contracts] = await Promise.all([getAll("docs"), getAll("contracts")]);
   const t = todayISO();
 
-  // Docs CSV
-  const docCols = [
-    "id","partyName","docType","docNumber","amount","currency","incurredDate","issueDate","dueDate","status","paidDate","fileName","fileType","fileSize","notes","createdAt"
-  ];
-  const docLines = [docCols.join(",")].concat(
-    docs.map(d => docCols.map(k => csvCell(d[k])).join(","))
-  );
+  const docCols = ["id","partyName","docType","docNumber","amount","currency","incurredDate","issueDate","dueDate","status","paidDate","fileName","fileType","fileSize","notes","createdAt"];
+  const docLines = [docCols.join(",")].concat(docs.map(d => docCols.map(k => csvCell(d[k])).join(",")));
 
-  // Contract schedule CSV (next 5 years)
   const sched = build5YearContractSchedule(contracts, null);
   const schedCols = ["supplier","contractName","amount","anchorDate","cashDate","incurredDate"];
-  const schedLines = [schedCols.join(",")].concat(
-    sched.map(s => schedCols.map(k => csvCell(s[k])).join(","))
-  );
+  const schedLines = [schedCols.join(",")].concat(sched.map(s => schedCols.map(k => csvCell(s[k])).join(",")));
 
-  // Summary by supplier (paid as of today, scheduled 5y)
-  const suppliers = Array.from(new Set([
-    ...docs.map(d=>d.partyName).filter(Boolean),
-    ...contracts.map(c=>c.supplier).filter(Boolean)
-  ])).sort((a,b)=>a.localeCompare(b));
-
+  const suppliers = Array.from(new Set([...docs.map(d=>d.partyName).filter(Boolean), ...contracts.map(c=>c.supplier).filter(Boolean)])).sort((a,b)=>a.localeCompare(b));
   const tEnd = new Date(t); tEnd.setFullYear(tEnd.getFullYear()+5);
   const tEndIso = toISODate(tEnd);
 
@@ -1011,13 +929,9 @@ async function exportCSV(){
     suppliers.map(name=>{
       const apPaid = docs.filter(d=>d.partyName===name && d.docType==="AP" && d.status==="Paid" && d.paidDate && d.paidDate<=t)
         .reduce((s,d)=>s+Number(d.amount||0),0);
-
-      const schedName = build5YearContractSchedule(contracts, name)
-        .reduce((s,x)=>s+Number(x.amount||0),0);
-
+      const schedName = build5YearContractSchedule(contracts, name).reduce((s,x)=>s+Number(x.amount||0),0);
       const open5 = docs.filter(d=>d.partyName===name && d.docType==="AP" && d.status==="Open" && d.dueDate && d.dueDate>=t && d.dueDate<=tEndIso)
         .reduce((s,d)=>s+Number(d.amount||0),0);
-
       const tot = schedName + open5;
       const row = { supplier:name, apPaidCashAsOfToday: apPaid, scheduledCashContracts5y: schedName, openApDue5y: open5, totalScheduled5y: tot };
       return summaryCols.map(k => csvCell(row[k])).join(",");
@@ -1038,16 +952,9 @@ async function exportCSV(){
   download(`rigsandcables_apar_export_${t}.csv`, new Blob([combined], {type:"text/csv;charset=utf-8"}));
 }
 
-function csvCell(v){
-  if(v === null || v === undefined) return "";
-  const s = String(v).replaceAll('"','""');
-  return `"${s}"`;
-}
-
 async function backupJSON(){
   const [docs, contracts] = await Promise.all([getAll("docs"), getAll("contracts")]);
 
-  // Convert blobs to base64 to make JSON portable
   const docsPortable = [];
   for(const d of docs){
     const portable = {...d};
@@ -1058,13 +965,7 @@ async function backupJSON(){
     docsPortable.push(portable);
   }
 
-  const payload = {
-    exportedAt: new Date().toISOString(),
-    company: "RigsandCables Inc",
-    docs: docsPortable,
-    contracts
-  };
-
+  const payload = { exportedAt: new Date().toISOString(), company: "RigsandCables Inc", docs: docsPortable, contracts };
   download(`rigsandcables_backup_${todayISO()}.json`, new Blob([JSON.stringify(payload,null,2)], {type:"application/json"}));
 }
 
@@ -1106,22 +1007,153 @@ async function restoreJSON(file){
 }
 
 /* ===========================
-   Event wiring
+   PDF Autofill (text-based PDFs)
+=========================== */
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+async function extractTextFromPdf(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+
+  const maxPages = Math.min(2, pdf.numPages);
+  let full = "";
+  for(let p=1; p<=maxPages; p++){
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    full += " " + content.items.map(it=>it.str).join(" ");
+  }
+  return full.replace(/\s+/g," ").trim();
+}
+
+function findFirstMatch(text, regex){
+  const m = text.match(regex);
+  return m ? (m[1] || m[0]) : "";
+}
+
+function normalizeMoney(s){
+  if(!s) return "";
+  const cleaned = s.replace(/,/g,"").match(/\d+(\.\d{1,2})?/);
+  return cleaned ? cleaned[0] : "";
+}
+
+function parseInvoiceNumber(text){
+  return findFirstMatch(
+    text,
+    /\b(?:invoice\s*(?:number|no|#)?|inv\s*(?:number|no|#)?)\s*[:#]?\s*([A-Z0-9-]{4,})\b/i
+  );
+}
+
+function parseTotalAmount(text){
+  const preferred = findFirstMatch(
+    text,
+    /\b(?:total\s*amount\s*due|amount\s*due|balance\s*due|total\s*due|invoice\s*total|total)\b\s*[:$]?\s*\$?\s*([0-9][0-9,]*\.?\d{0,2})/i
+  );
+  if(preferred) return normalizeMoney(preferred);
+
+  const matches = [...text.matchAll(/\$?\s*([0-9][0-9,]*\.?\d{2})\b/g)].map(m => normalizeMoney(m[1]));
+  const nums = matches.map(x=>Number(x)).filter(n=>!Number.isNaN(n));
+  if(!nums.length) return "";
+  return String(Math.max(...nums));
+}
+
+function parseDateAny(s){
+  if(!s) return "";
+
+  const iso = findFirstMatch(s, /\b(20\d{2}-\d{2}-\d{2})\b/);
+  if(iso) return iso;
+
+  const us = findFirstMatch(s, /\b(\d{1,2}\/\d{1,2}\/20\d{2})\b/);
+  if(us){
+    const [mm,dd,yyyy] = us.split("/");
+    return `${yyyy}-${String(mm).padStart(2,"0")}-${String(dd).padStart(2,"0")}`;
+  }
+
+  const m = s.match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\s+(\d{1,2}),?\s+(20\d{2})\b/i);
+  if(m){
+    const monMap = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12};
+    const mm = String(monMap[m[1].toLowerCase()]).padStart(2,"0");
+    const dd = String(m[2]).padStart(2,"0");
+    return `${m[3]}-${mm}-${dd}`;
+  }
+
+  return "";
+}
+
+function parseIssueDate(text){
+  const chunk = findFirstMatch(text, /\b(?:date\s*issued|invoice\s*date|bill\s*date|date)\b\s*[:#]?\s*([A-Za-z0-9,\/ -]{6,25})/i);
+  return parseDateAny(chunk) || parseDateAny(text);
+}
+
+function parseDueDate(text){
+  const chunk = findFirstMatch(text, /\b(?:due\s*date|payment\s*due|payable\s*by)\b\s*[:#]?\s*([A-Za-z0-9,\/ -]{6,25})/i);
+  return parseDateAny(chunk);
+}
+
+function parseSupplier(text){
+  let supplier = findFirstMatch(text, /\b(?:from|vendor|supplier)\b\s*[:#]?\s*([A-Za-z0-9&.,' -]{3,50})/i);
+  if(!supplier){
+    const head = text.split(" ").slice(0, 18).join(" ");
+    supplier = findFirstMatch(head, /\b([A-Z][A-Za-z0-9&.,' -]{2,40}\b(?:LLC|INC|CO|CORP|LTD|COMPANY)?)\b/);
+  }
+  return (supplier || "").trim();
+}
+
+async function autofillFromPdf(file){
+  const text = await extractTextFromPdf(file);
+
+  // If scanned PDF, extracted text may be empty
+  if(!text || text.length < 20){
+    alert("I couldn't read text from this PDF. If it's a scanned invoice, you need OCR (I can add OCR next).");
+    return;
+  }
+
+  const supplier = parseSupplier(text);
+  const invNo = parseInvoiceNumber(text);
+  const total = parseTotalAmount(text);
+  const issue = parseIssueDate(text);
+  const due = parseDueDate(text);
+
+  if(supplier && !el("partyName").value) el("partyName").value = supplier;
+  if(invNo && !el("docNumber").value) el("docNumber").value = invNo;
+  if(total && !el("amount").value) el("amount").value = total;
+
+  if(issue){
+    if(!el("issueDate").value) el("issueDate").value = issue;
+    if(!el("incurredDate").value) el("incurredDate").value = issue;
+  }
+  if(due && !el("dueDate").value) el("dueDate").value = due;
+
+  if(!el("dueDate").value){
+    const base = el("issueDate").value || el("incurredDate").value || todayISO();
+    el("dueDate").value = addDays(base, 30);
+  }
+
+  // Optional: focus Amount if still empty
+  if(!el("amount").value) el("amount").focus();
+}
+
+/* ===========================
+   Event wiring + init
 =========================== */
 async function init(){
   db = await openDB();
   el("dbStatus").textContent = "DB: ready";
   setDefaultDates();
-
-  // Defaults for contract dates
-  const t = todayISO();
-  el("cStart").value = t;
-
+  el("cStart").value = todayISO();
   await refreshAll();
 }
 
+el("fileInput").addEventListener("change", async ()=>{
+  const f = el("fileInput").files && el("fileInput").files[0];
+  if(!f) return;
+  const isPdf = (f.type || "").toLowerCase().includes("pdf") || f.name.toLowerCase().endsWith(".pdf");
+  if(isPdf) await autofillFromPdf(f);
+});
+
 el("docForm").addEventListener("submit", async (e)=>{
   e.preventDefault();
+
   const file = el("fileInput").files[0];
   if(!file) return;
 
@@ -1158,7 +1190,6 @@ el("btnClearDoc").addEventListener("click", clearDocForm);
 
 el("contractForm").addEventListener("submit", async (e)=>{
   e.preventDefault();
-
   const c = {
     id: id(),
     company: "RigsandCables Inc",
@@ -1172,7 +1203,6 @@ el("contractForm").addEventListener("submit", async (e)=>{
     incurOffsetDays: Number(el("cIncurOffset").value||0),
     createdAt: new Date().toISOString()
   };
-
   await putContract(c);
   clearContractForm();
   await refreshAll();
@@ -1185,13 +1215,14 @@ el("btnClearContract").addEventListener("click", clearContractForm);
   el(idv).addEventListener("change", refreshAll);
 });
 
-el("supplierPick").addEventListener("change", ()=>renderSupplierSummaryCache());
-el("btnRecalc").addEventListener("click", ()=>renderSupplierSummaryCache());
-
-async function renderSupplierSummaryCache(){
+el("supplierPick").addEventListener("change", async ()=>{
   const [docs, contracts] = await Promise.all([getAll("docs"), getAll("contracts")]);
   renderSupplierSummary(docs, contracts);
-}
+});
+el("btnRecalc").addEventListener("click", async ()=>{
+  const [docs, contracts] = await Promise.all([getAll("docs"), getAll("contracts")]);
+  renderSupplierSummary(docs, contracts);
+});
 
 el("btnExport").addEventListener("click", exportCSV);
 el("btnBackup").addEventListener("click", backupJSON);
@@ -1212,7 +1243,6 @@ el("btnWipe").addEventListener("click", async ()=>{
   location.reload();
 });
 
-// Improve paidDate UX based on status
 el("status").addEventListener("change", ()=>{
   if(el("status").value === "Paid" && !el("paidDate").value){
     el("paidDate").value = todayISO();
