@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RigsandCables Inc — AP/AR Invoices & Receipts</title>
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#121a2b; --panel2:#0f1726; --text:#e7ecff; --muted:#a9b3d6;
+      --accent:#5aa2ff; --accent2:#31d0aa; --danger:#ff6b6b; --border:#23304c;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:var(--sans); background:radial-gradient(1100px 800px at 10% 10%, #152447 0%, var(--bg) 40%, #070b14 100%);
+      color:var(--text);
+    }
+    header{
+      padding:28px 18px 18px; max-width:1200px; margin:0 auto;
+      display:flex; gap:14px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
+    }
+    .brand{
+      display:flex; flex-direction:column; gap:6px;
+    }
+    .brand h1{margin:0; font-size:20px; letter-spacing:.2px}
+    .brand p{margin:0; color:var(--muted); font-size:13px}
+    .top-actions{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    button, .btn{
+      border:1px solid var(--border); background:linear-gradient(180deg, #1a2742 0%, #101a2e 100%);
+      color:var(--text); padding:10px 12px; border-radius:12px; cursor:pointer;
+      box-shadow:0 6px 16px rgba(0,0,0,.25);
+      font-weight:600; font-size:13px;
+    }
+    button:hover{border-color:#35518a}
+    button.primary{
+      background:linear-gradient(180deg, #2d6fff 0%, #1f4dcc 100%);
+      border-color:#2f63df;
+    }
+    button.good{
+      background:linear-gradient(180deg, #20c997 0%, #119d76 100%);
+      border-color:#1bb78a;
+    }
+    button.danger{
+      background:linear-gradient(180deg, #ff6b6b 0%, #d95353 100%);
+      border-color:#ff6b6b;
+    }
+    .wrap{
+      max-width:1200px; margin:0 auto; padding:0 18px 28px;
+      display:grid; gap:14px;
+      grid-template-columns: 1.1fr .9fr;
+    }
+    @media (max-width: 980px){
+      .wrap{grid-template-columns:1fr}
+    }
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.05) 0%, rgba(255,255,255,.02) 100%);
+      border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding:14px 14px 10px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(16,26,46,.85) 0%, rgba(16,26,46,.35) 100%);
+    }
+    .card .hd h2{margin:0; font-size:14px}
+    .card .hd .sub{color:var(--muted); font-size:12px}
+    .card .bd{padding:14px}
+    .grid{
+      display:grid; gap:10px;
+      grid-template-columns: repeat(12, 1fr);
+    }
+    .field{grid-column: span 6; display:flex; flex-direction:column; gap:6px}
+    .field.sm{grid-column: span 3}
+    .field.lg{grid-column: span 12}
+    label{font-size:12px; color:var(--muted)}
+    input, select, textarea{
+      width:100%; padding:10px 10px; border-radius:12px;
+      border:1px solid var(--border); background:rgba(0,0,0,.22);
+      color:var(--text); outline:none;
+    }
+    input::placeholder, textarea::placeholder{color:#7f8ab3}
+    textarea{min-height:70px; resize:vertical}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .pill{
+      font-family:var(--mono); font-size:12px; color:#cfe0ff;
+      border:1px solid rgba(90,162,255,.35);
+      background:rgba(90,162,255,.10);
+      padding:6px 10px; border-radius:999px;
+    }
+    .kpis{display:grid; grid-template-columns: repeat(3, 1fr); gap:10px}
+    @media(max-width:600px){.kpis{grid-template-columns:1fr}}
+    .kpi{
+      padding:12px; border-radius:14px; border:1px solid rgba(255,255,255,.07);
+      background:rgba(0,0,0,.18);
+    }
+    .kpi .t{color:var(--muted); font-size:12px}
+    .kpi .v{font-size:18px; font-weight:800; margin-top:4px}
+    .kpi .v.good{color:#7cf1d0}
+    .kpi .v.bad{color:#ff9a9a}
+    table{width:100%; border-collapse:collapse}
+    th, td{
+      text-align:left; padding:10px 8px; border-bottom:1px solid rgba(255,255,255,.06);
+      font-size:12px; vertical-align:top;
+    }
+    th{color:#b8c3ea; font-size:12px; font-weight:700}
+    td .mini{color:var(--muted); font-size:11px}
+    .tag{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:4px 8px; border-radius:999px; font-size:11px; border:1px solid rgba(255,255,255,.08);
+      background:rgba(0,0,0,.18);
+    }
+    .tag.good{border-color:rgba(49,208,170,.35); background:rgba(49,208,170,.12)}
+    .tag.bad{border-color:rgba(255,107,107,.35); background:rgba(255,107,107,.12)}
+    .actions-cell{display:flex; gap:6px; flex-wrap:wrap}
+    .muted{color:var(--muted)}
+    .note{
+      font-size:12px; color:var(--muted); line-height:1.4;
+      background:rgba(0,0,0,.18); border:1px dashed rgba(255,255,255,.12);
+      padding:10px 12px; border-radius:14px;
+    }
+    .hr{height:1px; background:rgba(255,255,255,.06); margin:12px 0}
+    .right-col{display:grid; gap:14px}
+    .small{font-size:12px}
+    .mono{font-family:var(--mono)}
+    .link{
+      color:#9cc3ff; text-decoration:underline; cursor:pointer;
+    }
+    .footer{
+      max-width:1200px; margin:0 auto; padding:0 18px 28px; color:rgba(255,255,255,.45); font-size:12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>RigsandCables Inc — AP/AR Receipt & Invoice Tracker</h1>
+      <p>Upload documents, track incurred vs paid, forecast scheduled payments for the next 5 years, export to Excel.</p>
+    </div>
+    <div class="top-actions">
+      <button class="primary" id="btnExport">Export to Excel (CSV)</button>
+      <button id="btnBackup">Backup (JSON)</button>
+      <button id="btnRestore">Restore (JSON)</button>
+      <button class="danger" id="btnWipe">Wipe Local DB</button>
+      <input id="restoreFile" type="file" accept="application/json" hidden />
+    </div>
+  </header>
+
+  <div class="wrap">
+    <!-- LEFT: Data entry + tables -->
+    <div class="left-col" style="display:grid; gap:14px;">
+      <div class="card">
+        <div class="hd">
+          <div>
+            <h2>Add Invoice / Receipt (AP/AR)</h2>
+            <div class="sub">Stores file + accounting metadata. “Incurred” = recognized cost/revenue date; “Paid/Received” = cash date.</div>
+          </div>
+          <span class="pill" id="dbStatus">DB: initializing…</span>
+        </div>
+        <div class="bd">
+          <form id="docForm">
+            <div class="grid">
+              <div class="field lg">
+                <label>Upload file (PDF, image, etc.)</label>
+                <input type="file" id="fileInput" required />
+                <div class="small muted">Files are stored in your browser database (IndexedDB). If you share the link, others will have their own separate local DB unless you use a real backend.</div>
+              </div>
+
+              <div class="field">
+                <label>Supplier / Customer name</label>
+                <input id="partyName" placeholder="e.g., ABC Supplier LLC" required />
+              </div>
+
+              <div class="field">
+                <label>Type</label>
+                <select id="docType" required>
+                  <option value="AP">Accounts Payable (you pay supplier)</option>
+                  <option value="AR">Accounts Receivable (customer pays you)</option>
+                </select>
+              </div>
+
+              <div class="field sm">
+                <label>Document #</label>
+                <input id="docNumber" placeholder="INV-10021" />
+              </div>
+
+              <div class="field sm">
+                <label>Amount (USD)</label>
+                <input id="amount" type="number" step="0.01" placeholder="2500.00" required />
+              </div>
+
+              <div class="field sm">
+                <label>Currency</label>
+                <select id="currency">
+                  <option value="USD" selected>USD</option>
+                  <option value="CAD">CAD</option>
+                  <option value="EUR">EUR</option>
+                </select>
+              </div>
+
+              <div class="field sm">
+                <label>Incurred date (recognition)</label>
+                <input id="incurredDate" type="date" required />
+              </div>
+
+              <div class="field sm">
+                <label>Issue date</label>
+                <input id="issueDate" type="date" />
+              </div>
+
+              <div class="field sm">
+                <label>Due date</label>
+                <input id="dueDate" type="date" />
+              </div>
+
+              <div class="field sm">
+                <label>Status</label>
+                <select id="status">
+                  <option value="Open" selected>Open</option>
+                  <option value="Paid">Paid/Received</option>
+                </select>
+              </div>
+
+              <div class="field sm">
+                <label>Paid/Received date (cash date)</label>
+                <input id="paidDate" type="date" />
+              </div>
+
+              <div class="field lg">
+                <label>Notes</label>
+                <textarea id="notes" placeholder="Optional notes…"></textarea>
+              </div>
+
+              <div class="field lg">
+                <div class="row">
+                  <button class="good" type="submit">Save Document</button>
+                  <button type="button" id="btnClearDoc">Clear</button>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          <div class="hr"></div>
+          <div class="note">
+            <b>Incurred payment idea</b>: This tool separates <span class="mono">Incurred Date</span> (when expense/revenue is recognized)
+            from <span class="mono">Paid/Received Date</span> (when cash happens). Your “as of today paid” totals use the cash date;
+            your incurred totals can be used for accrual-style reporting.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="hd">
+          <div>
+            <h2>Documents</h2>
+            <div class="sub">Search, open file, mark paid/received, delete.</div>
+          </div>
+          <div class="row">
+            <input id="searchDocs" placeholder="Search supplier / doc # / notes…" />
+            <select id="filterType">
+              <option value="ALL" selected>All</option>
+              <option value="AP">AP only</option>
+              <option value="AR">AR only</option>
+            </select>
+            <select id="filterStatus">
+              <option value="ALL" selected>All statuses</option>
+              <option value="Open">Open</option>
+              <option value="Paid">Paid/Received</option>
+            </select>
+          </div>
+        </div>
+        <div class="bd" style="padding:0;">
+          <div style="overflow:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Supplier/Customer</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Incurred</th>
+                  <th>Due</th>
+                  <th>Status</th>
+                  <th>File</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="docsTbody"></tbody>
+            </table>
+          </div>
+          <div style="padding:12px 14px; color:var(--muted); font-size:12px;">
+            Tip: “Open” uses Due Date for upcoming obligations; “Paid/Received” uses Paid Date for “as of today” totals.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Contracts + dashboards -->
+    <div class="right-col">
+      <div class="card">
+        <div class="hd">
+          <div>
+            <h2>KPIs (as of today)</h2>
+            <div class="sub" id="todayLabel">Calculating…</div>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="kpis">
+            <div class="kpi">
+              <div class="t">AP Paid (cash) — suppliers</div>
+              <div class="v good" id="kpiApPaid">$0</div>
+              <div class="mini muted">Sum of AP documents marked paid with paid date ≤ today.</div>
+            </div>
+            <div class="kpi">
+              <div class="t">AR Received (cash) — customers</div>
+              <div class="v good" id="kpiArPaid">$0</div>
+              <div class="mini muted">Sum of AR documents marked paid/received with paid date ≤ today.</div>
+            </div>
+            <div class="kpi">
+              <div class="t">Open AP Due Next 90 Days</div>
+              <div class="v bad" id="kpiAp90">$0</div>
+              <div class="mini muted">Sum of open AP due within 90 days.</div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="row" style="justify-content:space-between;">
+            <div class="muted small">Supplier paid totals include document cash payments + contract scheduled cash if you choose to track both.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="hd">
+          <div>
+            <h2>Supplier Contracts (Schedule next 5 years)</h2>
+            <div class="sub">Add recurring contract payments for suppliers who have contracts with RigsandCables Inc.</div>
+          </div>
+        </div>
+        <div class="bd">
+          <form id="contractForm">
+            <div class="grid">
+              <div class="field">
+                <label>Supplier name</label>
+                <input id="cSupplier" placeholder="e.g., ABC Supplier LLC" required />
+              </div>
+              <div class="field">
+                <label>Contract name</label>
+                <input id="cName" placeholder="e.g., Cable supply agreement" required />
+              </div>
+
+              <div class="field sm">
+                <label>Start date</label>
+                <input id="cStart" type="date" required />
+              </div>
+              <div class="field sm">
+                <label>End date (optional)</label>
+                <input id="cEnd" type="date" />
+              </div>
+
+              <div class="field sm">
+                <label>Frequency</label>
+                <select id="cFreq" required>
+                  <option value="MONTHLY" selected>Monthly</option>
+                  <option value="QUARTERLY">Quarterly</option>
+                  <option value="ANNUAL">Annual</option>
+                </select>
+              </div>
+
+              <div class="field sm">
+                <label>Amount per payment (USD)</label>
+                <input id="cAmt" type="number" step="0.01" placeholder="5000.00" required />
+              </div>
+
+              <div class="field sm">
+                <label>Payment terms (Net days)</label>
+                <input id="cNet" type="number" step="1" value="30" required />
+              </div>
+
+              <div class="field sm">
+                <label>Incurred offset (days before cash)</label>
+                <input id="cIncurOffset" type="number" step="1" value="0" />
+              </div>
+
+              <div class="field lg">
+                <div class="row">
+                  <button class="good" type="submit">Save Contract</button>
+                  <button type="button" id="btnClearContract">Clear</button>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          <div class="hr"></div>
+
+          <div class="note">
+            Contract schedule logic:
+            <ul style="margin:8px 0 0 18px; padding:0; color:var(--muted);">
+              <li><b>Scheduled cash date</b> = period date + net days</li>
+              <li><b>Incurred date</b> = scheduled cash date − incurred offset days (for accrual-style reporting)</li>
+              <li>We forecast <b>only next 5 years from today</b>.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="hd">
+          <div>
+            <h2>Supplier Summary</h2>
+            <div class="sub">Paid as of today + scheduled next 5 years (contracts + open invoices)</div>
+          </div>
+          <div class="row">
+            <select id="supplierPick" style="min-width:240px;"></select>
+            <button id="btnRecalc">Recalculate</button>
+          </div>
+        </div>
+        <div class="bd" style="padding:0;">
+          <div style="overflow:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th>Value</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody id="supplierSummary"></tbody>
+            </table>
+          </div>
+
+          <div class="hr"></div>
+
+          <div style="padding:0 14px 14px;">
+            <div class="muted small">5-year schedule (cash) by year</div>
+            <div style="overflow:auto; margin-top:8px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Year</th>
+                    <th>Scheduled Cash (Contracts)</th>
+                    <th>Open AP Due (Invoices)</th>
+                    <th>Total Scheduled Cash</th>
+                  </tr>
+                </thead>
+                <tbody id="yearBreakdown"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="hd">
+          <div>
+            <h2>Contracts</h2>
+            <div class="sub">Manage contract records</div>
+          </div>
+        </div>
+        <div class="bd" style="padding:0;">
+          <div style="overflow:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Supplier</th>
+                  <th>Contract</th>
+                  <th>Freq</th>
+                  <th>Amount</th>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th>Net</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="contractsTbody"></tbody>
+            </table>
+          </div>
+          <div style="padding:12px 14px; color:var(--muted); font-size:12px;">
+            If you need multi-user sharing with a real database, ask me for the Supabase version.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="mono">RigsandCables Inc — Local MVP • Data stored in IndexedDB (browser). Export/Backup recommended.</div>
+  </div>
+
+<script>
+/* ===========================
+   IndexedDB mini-wrapper
+=========================== */
+const DB_NAME = "rigsandcables_apar_db";
+const DB_VERSION = 1;
+let db;
+
+function openDB(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains("docs")){
+        const s = d.createObjectStore("docs", { keyPath: "id" });
+        s.createIndex("partyName", "partyName", { unique:false });
+        s.createIndex("docType", "docType", { unique:false });
+        s.createIndex("status", "status", { unique:false });
+        s.createIndex("incurredDate", "incurredDate", { unique:false });
+      }
+      if(!d.objectStoreNames.contains("contracts")){
+        const s2 = d.createObjectStore("contracts", { keyPath: "id" });
+        s2.createIndex("supplier", "supplier", { unique:false });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function tx(storeName, mode="readonly"){
+  return db.transaction(storeName, mode).objectStore(storeName);
+}
+
+function id(){
+  return crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + "_" + Math.random().toString(16).slice(2);
+}
+
+function fmtMoney(n){
+  const v = Number(n||0);
+  return v.toLocaleString(undefined, { style:"currency", currency:"USD" });
+}
+
+function toISODate(d){
+  if(!d) return "";
+  const x = new Date(d);
+  if (Number.isNaN(x.getTime())) return "";
+  const yyyy = x.getFullYear();
+  const mm = String(x.getMonth()+1).padStart(2,"0");
+  const dd = String(x.getDate()).padStart(2,"0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function addDays(iso, days){
+  const d = new Date(iso);
+  d.setDate(d.getDate() + Number(days||0));
+  return toISODate(d);
+}
+
+function todayISO(){
+  return toISODate(new Date());
+}
+
+async function putDoc(doc){
+  return new Promise((resolve,reject)=>{
+    const s = tx("docs","readwrite");
+    const r = s.put(doc);
+    r.onsuccess = ()=>resolve(true);
+    r.onerror = ()=>reject(r.error);
+  });
+}
+
+async function putContract(c){
+  return new Promise((resolve,reject)=>{
+    const s = tx("contracts","readwrite");
+    const r = s.put(c);
+    r.onsuccess = ()=>resolve(true);
+    r.onerror = ()=>reject(r.error);
+  });
+}
+
+async function getAll(store){
+  return new Promise((resolve,reject)=>{
+    const s = tx(store,"readonly");
+    const r = s.getAll();
+    r.onsuccess = ()=>resolve(r.result||[]);
+    r.onerror = ()=>reject(r.error);
+  });
+}
+
+async function del(store, key){
+  return new Promise((resolve,reject)=>{
+    const s = tx(store,"readwrite");
+    const r = s.delete(key);
+    r.onsuccess = ()=>resolve(true);
+    r.onerror = ()=>reject(r.error);
+  });
+}
+
+async function wipeDB(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.deleteDatabase(DB_NAME);
+    req.onsuccess = ()=>resolve(true);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+
+/* ===========================
+   File handling
+=========================== */
+function fileToBlobAndMeta(file){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = () => {
+      resolve({
+        fileName: file.name,
+        fileType: file.type || "application/octet-stream",
+        fileSize: file.size,
+        fileBlob: new Blob([reader.result], { type: file.type || "application/octet-stream" })
+      });
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function openStoredFile(doc){
+  if(!doc.fileBlob) return;
+  const url = URL.createObjectURL(doc.fileBlob);
+  window.open(url, "_blank", "noopener,noreferrer");
+  // URL.revokeObjectURL(url) // not immediate, to keep tab working
+}
+
+/* ===========================
+   Scheduling
+=========================== */
+function iterScheduleDates(startISO, endISO, freq){
+  // Generates period "anchor dates" (not cash dates). Cash date = anchor + netDays.
+  const dates = [];
+  let d = new Date(startISO);
+  const end = endISO ? new Date(endISO) : null;
+
+  const step = (date) => {
+    const nd = new Date(date);
+    if(freq === "MONTHLY") nd.setMonth(nd.getMonth()+1);
+    else if(freq === "QUARTERLY") nd.setMonth(nd.getMonth()+3);
+    else if(freq === "ANNUAL") nd.setFullYear(nd.getFullYear()+1);
+    return nd;
+  };
+
+  for(let i=0;i<10000;i++){
+    const iso = toISODate(d);
+    if(!iso) break;
+    if(end && d > end) break;
+    dates.push(iso);
+    d = step(d);
+    if(end && d > end) break;
+    // safety: stop if > 30 years
+    if(i>4000) break;
+  }
+  return dates;
+}
+
+function build5YearContractSchedule(contracts, supplier){
+  const t0 = new Date(todayISO());
+  const tEnd = new Date(todayISO());
+  tEnd.setFullYear(tEnd.getFullYear()+5);
+
+  const items = [];
+  for(const c of contracts.filter(x => (supplier ? x.supplier === supplier : true))){
+    const anchorDates = iterScheduleDates(c.start, c.end || null, c.freq);
+    for(const a of anchorDates){
+      const cash = addDays(a, c.netDays);
+      const cashD = new Date(cash);
+      if(cashD < t0) continue;
+      if(cashD > tEnd) continue;
+
+      const incurred = addDays(cash, -Number(c.incurOffsetDays||0));
+      items.push({
+        supplier: c.supplier,
+        contractId: c.id,
+        contractName: c.name,
+        amount: Number(c.amount||0),
+        anchorDate: a,
+        cashDate: cash,
+        incurredDate: incurred
+      });
+    }
+  }
+  return items.sort((x,y)=> x.cashDate.localeCompare(y.cashDate));
+}
+
+/* ===========================
+   UI rendering
+=========================== */
+const el = (id)=>document.getElementById(id);
+
+function setDefaultDates(){
+  const t = todayISO();
+  el("incurredDate").value = t;
+  el("issueDate").value = t;
+  el("dueDate").value = addDays(t, 30);
+}
+
+function clearDocForm(){
+  el("docForm").reset();
+  setDefaultDates();
+  el("status").value = "Open";
+  el("currency").value = "USD";
+}
+
+function clearContractForm(){
+  el("contractForm").reset();
+  el("cFreq").value = "MONTHLY";
+  el("cNet").value = 30;
+  el("cIncurOffset").value = 0;
+}
+
+function docRow(doc){
+  const typeTag = doc.docType === "AP"
+    ? `<span class="tag bad">AP</span>`
+    : `<span class="tag good">AR</span>`;
+  const statusTag = doc.status === "Paid"
+    ? `<span class="tag good">Paid</span><div class="mini muted">${doc.paidDate ? "Cash: "+doc.paidDate : ""}</div>`
+    : `<span class="tag bad">Open</span>`;
+  const due = doc.dueDate ? doc.dueDate : `<span class="muted">—</span>`;
+  const amount = `${fmtMoney(doc.amount)}<div class="mini muted">${doc.currency||"USD"}</div>`;
+  const file = doc.fileName ? `<span class="link" data-open="${doc.id}">${doc.fileName}</span><div class="mini muted">${Math.round((doc.fileSize||0)/1024)} KB</div>` : `<span class="muted">—</span>`;
+  const notes = doc.notes ? ` <div class="mini muted">${escapeHtml(doc.notes).slice(0,80)}${doc.notes.length>80?"…":""}</div>` : "";
+
+  return `
+    <tr>
+      <td>${escapeHtml(doc.partyName)}${doc.docNumber ? `<div class="mini muted">#${escapeHtml(doc.docNumber)}</div>` : ""}${notes}</td>
+      <td>${typeTag}</td>
+      <td>${amount}</td>
+      <td>${doc.incurredDate || "—"}</td>
+      <td>${due}</td>
+      <td>${statusTag}</td>
+      <td>${file}</td>
+      <td>
+        <div class="actions-cell">
+          <button data-mark="${doc.id}">${doc.status==="Paid" ? "Mark Open" : "Mark Paid"}</button>
+          <button data-del="${doc.id}" class="danger">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function contractRow(c){
+  return `
+    <tr>
+      <td>${escapeHtml(c.supplier)}</td>
+      <td>${escapeHtml(c.name)}</td>
+      <td>${escapeHtml(c.freq)}</td>
+      <td>${fmtMoney(c.amount)}</td>
+      <td>${c.start}</td>
+      <td>${c.end || "—"}</td>
+      <td>${c.netDays}</td>
+      <td>
+        <div class="actions-cell">
+          <button data-cdel="${c.id}" class="danger">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function escapeHtml(s){
+  return String(s||"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+async function refreshAll(){
+  const [docs, contracts] = await Promise.all([getAll("docs"), getAll("contracts")]);
+  renderDocs(docs);
+  renderContracts(contracts);
+  renderSupplierPick(docs, contracts);
+  renderKPIs(docs);
+  renderSupplierSummary(docs, contracts);
+}
+
+function getDocFilters(){
+  return {
+    q: (el("searchDocs").value||"").trim().toLowerCase(),
+    type: el("filterType").value,
+    status: el("filterStatus").value
+  };
+}
+
+function renderDocs(docs){
+  const {q,type,status} = getDocFilters();
+  const filtered = docs.filter(d=>{
+    const hay = `${d.partyName||""} ${d.docNumber||""} ${d.notes||""}`.toLowerCase();
+    if(q && !hay.includes(q)) return false;
+    if(type !== "ALL" && d.docType !== type) return false;
+    if(status !== "ALL" && d.status !== status) return false;
+    return true;
+  }).sort((a,b)=> (b.incurredDate||"").localeCompare(a.incurredDate||""));
+
+  el("docsTbody").innerHTML = filtered.length
+    ? filtered.map(docRow).join("")
+    : `<tr><td colspan="8" class="muted" style="padding:14px;">No documents yet.</td></tr>`;
+
+  // wire open / mark / delete
+  el("docsTbody").querySelectorAll("[data-open]").forEach(a=>{
+    a.addEventListener("click", async ()=>{
+      const id = a.getAttribute("data-open");
+      const docs2 = await getAll("docs");
+      const doc = docs2.find(x=>x.id===id);
+      if(doc) openStoredFile(doc);
+    });
+  });
+  el("docsTbody").querySelectorAll("[data-del]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const id = btn.getAttribute("data-del");
+      await del("docs", id);
+      await refreshAll();
+    });
+  });
+  el("docsTbody").querySelectorAll("[data-mark]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const idv = btn.getAttribute("data-mark");
+      const docs2 = await getAll("docs");
+      const doc = docs2.find(x=>x.id===idv);
+      if(!doc) return;
+      if(doc.status === "Paid"){
+        doc.status = "Open";
+        doc.paidDate = "";
+      }else{
+        doc.status = "Paid";
+        doc.paidDate = doc.paidDate || todayISO();
+      }
+      await putDoc(doc);
+      await refreshAll();
+    });
+  });
+}
+
+function renderContracts(contracts){
+  const sorted = contracts.slice().sort((a,b)=> (a.supplier||"").localeCompare(b.supplier||""));
+  el("contractsTbody").innerHTML = sorted.length
+    ? sorted.map(contractRow).join("")
+    : `<tr><td colspan="8" class="muted" style="padding:14px;">No contracts yet.</td></tr>`;
+
+  el("contractsTbody").querySelectorAll("[data-cdel]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const idv = btn.getAttribute("data-cdel");
+      await del("contracts", idv);
+      await refreshAll();
+    });
+  });
+}
+
+function renderSupplierPick(docs, contracts){
+  const parties = new Set();
+  docs.forEach(d => parties.add(d.partyName));
+  contracts.forEach(c => parties.add(c.supplier));
+  const list = Array.from(parties).filter(Boolean).sort((a,b)=>a.localeCompare(b));
+  const prev = el("supplierPick").value;
+  el("supplierPick").innerHTML = `<option value="">All suppliers</option>` + list.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("");
+  el("supplierPick").value = list.includes(prev) ? prev : "";
+}
+
+function renderKPIs(docs){
+  const t = todayISO();
+  el("todayLabel").textContent = `As of ${t}`;
+
+  const apPaid = docs
+    .filter(d => d.docType==="AP" && d.status==="Paid" && d.paidDate && d.paidDate <= t)
+    .reduce((s,d)=> s + Number(d.amount||0), 0);
+
+  const arPaid = docs
+    .filter(d => d.docType==="AR" && d.status==="Paid" && d.paidDate && d.paidDate <= t)
+    .reduce((s,d)=> s + Number(d.amount||0), 0);
+
+  const t90 = new Date(t); t90.setDate(t90.getDate()+90);
+  const t90iso = toISODate(t90);
+
+  const ap90 = docs
+    .filter(d => d.docType==="AP" && d.status==="Open" && d.dueDate && d.dueDate >= t && d.dueDate <= t90iso)
+    .reduce((s,d)=> s + Number(d.amount||0), 0);
+
+  el("kpiApPaid").textContent = fmtMoney(apPaid);
+  el("kpiArPaid").textContent = fmtMoney(arPaid);
+  el("kpiAp90").textContent = fmtMoney(ap90);
+}
+
+function renderSupplierSummary(docs, contracts){
+  const supplier = el("supplierPick").value || "";
+  const t = todayISO();
+
+  const docsFor = supplier ? docs.filter(d=>d.partyName===supplier) : docs;
+  const contractsFor = supplier ? contracts.filter(c=>c.supplier===supplier) : contracts;
+
+  const apPaidCash = docsFor
+    .filter(d => d.docType==="AP" && d.status==="Paid" && d.paidDate && d.paidDate <= t)
+    .reduce((s,d)=> s + Number(d.amount||0), 0);
+
+  const apOpenTotal = docsFor
+    .filter(d => d.docType==="AP" && d.status==="Open")
+    .reduce((s,d)=> s + Number(d.amount||0), 0);
+
+  const apIncurredYTD = docsFor
+    .filter(d => d.docType==="AP" && d.incurredDate && d.incurredDate.slice(0,4) === t.slice(0,4))
+    .reduce((s,d)=> s + Number(d.amount||0), 0);
+
+  // 5-year contract schedule (cash)
+  const sched = build5YearContractSchedule(contractsFor, supplier || null);
+  const schedTotal = sched.reduce((s,x)=> s + Number(x.amount||0), 0);
+
+  // open invoice schedule for next 5 years (use dueDate)
+  const tEnd = new Date(t); tEnd.setFullYear(tEnd.getFullYear()+5);
+  const tEndIso = toISODate(tEnd);
+  const openInvoice5yr = docsFor
+    .filter(d => d.docType==="AP" && d.status==="Open" && d.dueDate && d.dueDate >= t && d.dueDate <= tEndIso)
+    .reduce((s,d)=> s + Number(d.amount||0), 0);
+
+  const total5yr = schedTotal + openInvoice5yr;
+
+  const rows = [
+    ["Supplier scope", supplier ? escapeHtml(supplier) : "<span class='muted'>All suppliers</span>", "Filter controls the summary"],
+    ["Paid as of today (cash)", fmtMoney(apPaidCash), "AP documents with status Paid and paid date ≤ today"],
+    ["Open AP total", fmtMoney(apOpenTotal), "All open AP documents (regardless of due date)"],
+    ["Incurred AP YTD", fmtMoney(apIncurredYTD), "AP incurred in current calendar year (accrual-style)"],
+    ["Scheduled cash next 5 years (contracts)", fmtMoney(schedTotal), "Generated from contract frequency + net terms"],
+    ["Open AP due next 5 years (invoices)", fmtMoney(openInvoice5yr), "Open AP documents with due date in next 5 years"],
+    ["Total scheduled cash next 5 years", fmtMoney(total5yr), "Contracts + open invoices (cash view)"]
+  ];
+
+  el("supplierSummary").innerHTML = rows.map(r=>`
+    <tr>
+      <td>${r[0]}</td>
+      <td><b>${r[1]}</b></td>
+      <td class="muted">${r[2]}</td>
+    </tr>
+  `).join("");
+
+  // Year breakdown (cash)
+  const yearMap = new Map(); // year -> {contracts, invoices}
+  const y0 = Number(t.slice(0,4));
+  for(let y=y0; y<=y0+5; y++){
+    yearMap.set(String(y), {contracts:0, invoices:0});
+  }
+  for(const s of sched){
+    const y = s.cashDate.slice(0,4);
+    if(yearMap.has(y)) yearMap.get(y).contracts += Number(s.amount||0);
+  }
+  for(const d of docsFor.filter(x=>x.docType==="AP" && x.status==="Open" && x.dueDate)){
+    const y = x.dueDate.slice(0,4);
+    if(yearMap.has(y)){
+      // only count future window
+      if(x.dueDate >= t && x.dueDate <= tEndIso) yearMap.get(y).invoices += Number(x.amount||0);
+    }
+  }
+
+  const yrRows = Array.from(yearMap.entries()).sort((a,b)=>a[0].localeCompare(b[0])).map(([y,v])=>{
+    const tot = v.contracts + v.invoices;
+    return `
+      <tr>
+        <td>${y}</td>
+        <td>${fmtMoney(v.contracts)}</td>
+        <td>${fmtMoney(v.invoices)}</td>
+        <td><b>${fmtMoney(tot)}</b></td>
+      </tr>
+    `;
+  });
+  el("yearBreakdown").innerHTML = yrRows.join("");
+}
+
+/* ===========================
+   Export / Backup / Restore
+=========================== */
+function download(filename, blob){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+async function exportCSV(){
+  const [docs, contracts] = await Promise.all([getAll("docs"), getAll("contracts")]);
+  const t = todayISO();
+
+  // Docs CSV
+  const docCols = [
+    "id","partyName","docType","docNumber","amount","currency","incurredDate","issueDate","dueDate","status","paidDate","fileName","fileType","fileSize","notes","createdAt"
+  ];
+  const docLines = [docCols.join(",")].concat(
+    docs.map(d => docCols.map(k => csvCell(d[k])).join(","))
+  );
+
+  // Contract schedule CSV (next 5 years)
+  const sched = build5YearContractSchedule(contracts, null);
+  const schedCols = ["supplier","contractName","amount","anchorDate","cashDate","incurredDate"];
+  const schedLines = [schedCols.join(",")].concat(
+    sched.map(s => schedCols.map(k => csvCell(s[k])).join(","))
+  );
+
+  // Summary by supplier (paid as of today, scheduled 5y)
+  const suppliers = Array.from(new Set([
+    ...docs.map(d=>d.partyName).filter(Boolean),
+    ...contracts.map(c=>c.supplier).filter(Boolean)
+  ])).sort((a,b)=>a.localeCompare(b));
+
+  const tEnd = new Date(t); tEnd.setFullYear(tEnd.getFullYear()+5);
+  const tEndIso = toISODate(tEnd);
+
+  const summaryCols = ["supplier","apPaidCashAsOfToday","scheduledCashContracts5y","openApDue5y","totalScheduled5y"];
+  const summaryLines = [summaryCols.join(",")].concat(
+    suppliers.map(name=>{
+      const apPaid = docs.filter(d=>d.partyName===name && d.docType==="AP" && d.status==="Paid" && d.paidDate && d.paidDate<=t)
+        .reduce((s,d)=>s+Number(d.amount||0),0);
+
+      const schedName = build5YearContractSchedule(contracts, name)
+        .reduce((s,x)=>s+Number(x.amount||0),0);
+
+      const open5 = docs.filter(d=>d.partyName===name && d.docType==="AP" && d.status==="Open" && d.dueDate && d.dueDate>=t && d.dueDate<=tEndIso)
+        .reduce((s,d)=>s+Number(d.amount||0),0);
+
+      const tot = schedName + open5;
+      const row = { supplier:name, apPaidCashAsOfToday: apPaid, scheduledCashContracts5y: schedName, openApDue5y: open5, totalScheduled5y: tot };
+      return summaryCols.map(k => csvCell(row[k])).join(",");
+    })
+  );
+
+  const combined = [
+    "### SHEET: Documents",
+    ...docLines,
+    "",
+    "### SHEET: ContractSchedule_5Y",
+    ...schedLines,
+    "",
+    "### SHEET: SupplierSummary",
+    ...summaryLines
+  ].join("\n");
+
+  download(`rigsandcables_apar_export_${t}.csv`, new Blob([combined], {type:"text/csv;charset=utf-8"}));
+}
+
+function csvCell(v){
+  if(v === null || v === undefined) return "";
+  const s = String(v).replaceAll('"','""');
+  return `"${s}"`;
+}
+
+async function backupJSON(){
+  const [docs, contracts] = await Promise.all([getAll("docs"), getAll("contracts")]);
+
+  // Convert blobs to base64 to make JSON portable
+  const docsPortable = [];
+  for(const d of docs){
+    const portable = {...d};
+    if(d.fileBlob){
+      portable.fileBase64 = await blobToBase64(d.fileBlob);
+      delete portable.fileBlob;
+    }
+    docsPortable.push(portable);
+  }
+
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    company: "RigsandCables Inc",
+    docs: docsPortable,
+    contracts
+  };
+
+  download(`rigsandcables_backup_${todayISO()}.json`, new Blob([JSON.stringify(payload,null,2)], {type:"application/json"}));
+}
+
+function blobToBase64(blob){
+  return new Promise((resolve,reject)=>{
+    const r = new FileReader();
+    r.onload = ()=> resolve(String(r.result).split(",")[1] || "");
+    r.onerror = ()=> reject(r.error);
+    r.readAsDataURL(blob);
+  });
+}
+
+function base64ToBlob(b64, type){
+  const bin = atob(b64);
+  const len = bin.length;
+  const arr = new Uint8Array(len);
+  for(let i=0;i<len;i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], {type: type || "application/octet-stream"});
+}
+
+async function restoreJSON(file){
+  const text = await file.text();
+  const payload = JSON.parse(text);
+
+  const docs = payload.docs || [];
+  const contracts = payload.contracts || [];
+
+  for(const d of docs){
+    const doc = {...d};
+    if(doc.fileBase64){
+      doc.fileBlob = base64ToBlob(doc.fileBase64, doc.fileType);
+      delete doc.fileBase64;
+    }
+    await putDoc(doc);
+  }
+  for(const c of contracts){
+    await putContract(c);
+  }
+}
+
+/* ===========================
+   Event wiring
+=========================== */
+async function init(){
+  db = await openDB();
+  el("dbStatus").textContent = "DB: ready";
+  setDefaultDates();
+
+  // Defaults for contract dates
+  const t = todayISO();
+  el("cStart").value = t;
+
+  await refreshAll();
+}
+
+el("docForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const file = el("fileInput").files[0];
+  if(!file) return;
+
+  const meta = await fileToBlobAndMeta(file);
+
+  const status = el("status").value;
+  let paidDate = el("paidDate").value;
+  if(status === "Paid" && !paidDate) paidDate = todayISO();
+
+  const doc = {
+    id: id(),
+    company: "RigsandCables Inc",
+    partyName: el("partyName").value.trim(),
+    docType: el("docType").value,
+    docNumber: el("docNumber").value.trim(),
+    amount: Number(el("amount").value||0),
+    currency: el("currency").value,
+    incurredDate: el("incurredDate").value,
+    issueDate: el("issueDate").value,
+    dueDate: el("dueDate").value,
+    status,
+    paidDate: status === "Paid" ? paidDate : "",
+    notes: el("notes").value.trim(),
+    createdAt: new Date().toISOString(),
+    ...meta
+  };
+
+  await putDoc(doc);
+  clearDocForm();
+  await refreshAll();
+});
+
+el("btnClearDoc").addEventListener("click", clearDocForm);
+
+el("contractForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+
+  const c = {
+    id: id(),
+    company: "RigsandCables Inc",
+    supplier: el("cSupplier").value.trim(),
+    name: el("cName").value.trim(),
+    start: el("cStart").value,
+    end: el("cEnd").value || "",
+    freq: el("cFreq").value,
+    amount: Number(el("cAmt").value||0),
+    netDays: Number(el("cNet").value||0),
+    incurOffsetDays: Number(el("cIncurOffset").value||0),
+    createdAt: new Date().toISOString()
+  };
+
+  await putContract(c);
+  clearContractForm();
+  await refreshAll();
+});
+
+el("btnClearContract").addEventListener("click", clearContractForm);
+
+["searchDocs","filterType","filterStatus"].forEach(idv=>{
+  el(idv).addEventListener("input", refreshAll);
+  el(idv).addEventListener("change", refreshAll);
+});
+
+el("supplierPick").addEventListener("change", ()=>renderSupplierSummaryCache());
+el("btnRecalc").addEventListener("click", ()=>renderSupplierSummaryCache());
+
+async function renderSupplierSummaryCache(){
+  const [docs, contracts] = await Promise.all([getAll("docs"), getAll("contracts")]);
+  renderSupplierSummary(docs, contracts);
+}
+
+el("btnExport").addEventListener("click", exportCSV);
+el("btnBackup").addEventListener("click", backupJSON);
+
+el("btnRestore").addEventListener("click", ()=> el("restoreFile").click());
+el("restoreFile").addEventListener("change", async ()=>{
+  const f = el("restoreFile").files[0];
+  if(!f) return;
+  await restoreJSON(f);
+  el("restoreFile").value = "";
+  await refreshAll();
+});
+
+el("btnWipe").addEventListener("click", async ()=>{
+  const ok = confirm("This will delete the local database for this site in your browser. Continue?");
+  if(!ok) return;
+  await wipeDB();
+  location.reload();
+});
+
+// Improve paidDate UX based on status
+el("status").addEventListener("change", ()=>{
+  if(el("status").value === "Paid" && !el("paidDate").value){
+    el("paidDate").value = todayISO();
+  }
+});
+
+init().catch(err=>{
+  console.error(err);
+  el("dbStatus").textContent = "DB: error";
+});
+</script>
+</body>
+</html>
